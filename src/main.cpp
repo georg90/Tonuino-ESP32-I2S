@@ -1,5 +1,5 @@
 // Define modules to compile:
-//#define MQTT_ENABLE
+#define MQTT_ENABLE
 #define FTP_ENABLE
 //#define NEOPIXEL_ENABLE
 
@@ -31,8 +31,6 @@
 #include <ArduinoJson.h>
 #include <nvsDump.h>
 
-
-
 // Info-docs:
 // https://docs.aws.amazon.com/de_de/freertos-kernel/latest/dg/queue-management.html
 // https://arduino-esp8266.readthedocs.io/en/latest/PROGMEM.html#how-do-i-declare-a-global-flash-string-and-use-it
@@ -44,7 +42,7 @@
 #define LOGLEVEL_DEBUG                  4           // almost everything
 
 // Serial-logging-configuration
-const uint8_t serialDebug = LOGLEVEL_INFO;          // Current loglevel for serial console
+const uint8_t serialDebug = LOGLEVEL_DEBUG;          // Current loglevel for serial console
 
 // Serial-logging buffer
 char logBuf[160];                                   // Buffer for all log-messages
@@ -164,7 +162,7 @@ uint8_t ledBrightness = initialLedBrightness;
 uint8_t nightLedBrightness = 2;                         // Brightness of Neopixel in nightmode
 
 // MQTT
-bool enableMqtt = false;
+bool enableMqtt = true;
 #ifdef MQTT_ENABLE
     uint8_t mqttFailCount = 3;                              // Number of times mqtt-reconnect is allowed to fail. If >= mqttFailCount to further reconnects take place
     uint8_t const stillOnlineInterval = 60;                 // Interval 'I'm still alive' is sent via MQTT (in seconds)
@@ -232,24 +230,26 @@ bool accessPointStarted = false;
 char mqtt_server[16] = "192.168.1.100";                  // IP-address of MQTT-server (if not found in NVS this one will be taken)
 #ifdef MQTT_ENABLE
     #define DEVICE_HOSTNAME "ESP32-Tonuino"                 // Name that that is used for MQTT
-    static const char topicSleepCmnd[] PROGMEM = "Cmnd/Tonuino/Sleep";
-    static const char topicSleepState[] PROGMEM = "State/Tonuino/Sleep";
-    static const char topicTrackCmnd[] PROGMEM = "Cmnd/Tonuino/Track";
-    static const char topicTrackState[] PROGMEM = "State/Tonuino/Track";
-    static const char topicTrackControlCmnd[] PROGMEM = "Cmnd/Tonuino/TrackControl";
-    static const char topicLoudnessCmnd[] PROGMEM = "Cmnd/Tonuino/Loudness";
-    static const char topicLoudnessState[] PROGMEM = "State/Tonuino/Loudness";
-    static const char topicSleepTimerCmnd[] PROGMEM = "Cmnd/Tonuino/SleepTimer";
-    static const char topicSleepTimerState[] PROGMEM = "State/Tonuino/SleepTimer";
-    static const char topicState[] PROGMEM = "State/Tonuino/State";
-    static const char topicCurrentIPv4IP[] PROGMEM = "State/Tonuino/IPv4";
-    static const char topicLockControlsCmnd[] PROGMEM ="Cmnd/Tonuino/LockControls";
-    static const char topicLockControlsState[] PROGMEM ="State/Tonuino/LockControls";
-    static const char topicPlaymodeState[] PROGMEM = "State/Tonuino/Playmode";
-    static const char topicRepeatModeCmnd[] PROGMEM = "Cmnd/Tonuino/RepeatMode";
-    static const char topicRepeatModeState[] PROGMEM = "State/Tonuino/RepeatMode";
-    static const char topicLedBrightnessCmnd[] PROGMEM = "Cmnd/Tonuino/LedBrightness";
-    static const char topicLedBrightnessState[] PROGMEM = "State/Tonuino/LedBrightness";
+    #define DEVICE_USER "sensor"
+    #define DEVICE_PASS "steffigeorg"
+    static const char topicSleepCmnd[] PROGMEM = "Tonuino/Cmnd/Sleep";
+    static const char topicSleepState[] PROGMEM = "Tonuino/State/Sleep";
+    static const char topicTrackCmnd[] PROGMEM = "Tonuino/Cmnd/Track";
+    static const char topicTrackState[] PROGMEM = "Tonuino/State/Track";
+    static const char topicTrackControlCmnd[] PROGMEM = "Tonuino/Cmnd/TrackControl";
+    static const char topicLoudnessCmnd[] PROGMEM = "Tonuino/Cmnd/Loudness";
+    static const char topicLoudnessState[] PROGMEM = "Tonuino/State/Loudness";
+    static const char topicSleepTimerCmnd[] PROGMEM = "Tonuino/Cmnd/SleepTimer";
+    static const char topicSleepTimerState[] PROGMEM = "Tonuino/State/SleepTimer";
+    static const char topicState[] PROGMEM = "Tonuino/State/State";
+    static const char topicCurrentIPv4IP[] PROGMEM = "Tonuino/State/IPv4";
+    static const char topicLockControlsCmnd[] PROGMEM ="Tonuino/Cmnd/LockControls";
+    static const char topicLockControlsState[] PROGMEM ="Tonuino/State/LockControls";
+    static const char topicPlaymodeState[] PROGMEM = "Tonuino/State/Playmode";
+    static const char topicRepeatModeCmnd[] PROGMEM = "Tonuino/Cmnd/RepeatMode";
+    static const char topicRepeatModeState[] PROGMEM = "Tonuino/State/RepeatMode";
+    static const char topicLedBrightnessCmnd[] PROGMEM = "Tonuino/Cmnd/LedBrightness";
+    static const char topicLedBrightnessState[] PROGMEM = "Tonuino/State/LedBrightness";
 #endif
 
 char stringDelimiter[] = "#";                               // Character used to encapsulate data in linear NVS-strings (don't change)
@@ -576,7 +576,7 @@ bool reconnect() {
     loggerNl(logBuf, LOGLEVEL_NOTICE);
 
     // Try to connect to MQTT-server
-    if (MQTTclient.connect(DEVICE_HOSTNAME)) {
+    if (MQTTclient.connect(DEVICE_HOSTNAME, DEVICE_USER, DEVICE_PASS)) {
         loggerNl((char *) FPSTR(mqttOk), LOGLEVEL_NOTICE);
 
         // Deepsleep-subscription
