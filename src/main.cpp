@@ -1,7 +1,7 @@
 // Define modules to compile:
 //#define MQTT_ENABLE
 #define FTP_ENABLE
-#define NEOPIXEL_ENABLE
+//#define NEOPIXEL_ENABLE
 
 #include <ESP32Encoder.h>
 #include "Arduino.h"
@@ -164,7 +164,7 @@ uint8_t ledBrightness = initialLedBrightness;
 uint8_t nightLedBrightness = 2;                         // Brightness of Neopixel in nightmode
 
 // MQTT
-bool enableMqtt = true;
+bool enableMqtt = false;
 #ifdef MQTT_ENABLE
     uint8_t mqttFailCount = 3;                              // Number of times mqtt-reconnect is allowed to fail. If >= mqttFailCount to further reconnects take place
     uint8_t const stillOnlineInterval = 60;                 // Interval 'I'm still alive' is sent via MQTT (in seconds)
@@ -229,7 +229,7 @@ bool accessPointStarted = false;
 
 
 // MQTT-configuration
-char mqtt_server[16] = "192.168.2.43";                  // IP-address of MQTT-server (if not found in NVS this one will be taken)
+char mqtt_server[16] = "192.168.1.100";                  // IP-address of MQTT-server (if not found in NVS this one will be taken)
 #ifdef MQTT_ENABLE
     #define DEVICE_HOSTNAME "ESP32-Tonuino"                 // Name that that is used for MQTT
     static const char topicSleepCmnd[] PROGMEM = "Cmnd/Tonuino/Sleep";
