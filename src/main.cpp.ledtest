@@ -1,0 +1,64 @@
+// Define modules to compile:
+#define MQTT_ENABLE
+#define FTP_ENABLE
+//#define NEOPIXEL_ENABLE
+#define REMOTE_DEBUG_ENABLE
+
+#include <ESP32Encoder.h>
+#include "Arduino.h"
+#include <WiFi.h>
+#ifdef FTP_ENABLE
+    #include "ESP32FtpServer.h"
+#endif
+#include "Audio.h"
+#include "SPI.h"
+#include "SD.h"
+#include "FS.h"
+#include "esp_task_wdt.h"
+#include <MFRC522.h>
+#include <Preferences.h>
+#ifdef MQTT_ENABLE
+    #include <PubSubClient.h>
+#endif
+#include <WebServer.h>
+#ifdef NEOPIXEL_ENABLE
+    #include <FastLED.h>
+#endif
+#include "logmessages.h"
+#include "websiteMgmt.h"
+#include "websiteBasic.h"
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
+#include <nvsDump.h>
+#ifdef REMOTE_DEBUG_ENABLE
+  #include <RemoteDebug.h>
+#endif
+// Info-docs:
+// https://docs.aws.amazon.com/de_de/freertos-kernel/latest/dg/queue-management.html
+// https://arduino-esp8266.readthedocs.io/en/latest/PROGMEM.html#how-do-i-declare-a-global-flash-string-and-use-it
+
+int Led = 3 ;// Deklaration des LED-Ausgangspin
+int Sensor = 33; // Deklaration des Sensor-Eingangspin
+int val; // Temporaere Variable
+
+void setup ()
+{
+  pinMode (Led, OUTPUT) ; // Initialisierung Ausgangspin
+  pinMode (Sensor, INPUT) ; // Initialisierung Sensorpin
+  digitalWrite(Sensor, HIGH); // Aktivierung interner Pull-Up Widerstand
+}
+
+void loop ()
+{
+  val = digitalRead (Sensor) ; // Das gegenwärtige Signal am Sensor wird ausgelesen
+
+  if (val == HIGH) // Falls ein Signal erkannt werden konnte, wird die LED eingeschaltet.
+  {
+    digitalWrite (Led, LOW);
+  }
+  else
+  {
+    digitalWrite (Led, HIGH);
+  }
+}

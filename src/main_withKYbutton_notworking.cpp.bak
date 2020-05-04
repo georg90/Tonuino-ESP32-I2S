@@ -50,6 +50,10 @@ const uint8_t serialDebug = LOGLEVEL_DEBUG;          // Current loglevel for ser
 // Serial-logging buffer
 char logBuf[160];                                   // Buffer for all log-messages
 
+// KY-027 sensor
+#define KY_SENSOR                       33
+#define KY_LED                          3
+
 // GPIOs (uSD card-reader)
 #define SPISD_CS                        15
 #define SPISD_MOSI                      13
@@ -186,8 +190,9 @@ char ftpPassword[15] = "esp32";                         // FTP-password
 
 // Button-configuration (change according your needs)
 uint8_t buttonDebounceInterval = 50;                    // Interval in ms to software-debounce buttons
+uint8_t buttonKyDebounceInterval = 500;                    // Interval in ms to software-debounce buttons
 uint16_t intervalToLongPress = 700;                     // Interval in ms to distinguish between short and long press of previous/next-button
-
+uint16_t intervalKyToLongPress = 1000;
 // Where to store the backup-file
 static const char backupFile[] PROGMEM = "/backup.txt"; // File is written every time a (new) RFID-assignment via GUI is done
 
@@ -313,7 +318,7 @@ typedef struct {
     unsigned long lastPressedTimestamp;
     unsigned long lastReleasedTimestamp;
 } t_button;
-t_button buttons[4];
+t_button buttons[5];
 
 Preferences prefsRfid;
 Preferences prefsSettings;
@@ -458,9 +463,28 @@ void buttonHandler() {
         buttons[1].currentState = digitalRead(PREVIOUS_BUTTON);
         buttons[2].currentState = digitalRead(PAUSEPLAY_BUTTON);
         buttons[3].currentState = digitalRead(DREHENCODER_BUTTON);
+        buttons[4].currentState = digitalRead(KY_SENSOR); // added for KY-027 button support
+        if (buttons[4].currentState == HIGH)
+            {
+              digitalWrite (KY_LED, LOW);
+            }
+        else
+            {
+              if (buttons[4].currentState != buttons[4].lastState && currentTimestamp - buttons[4].lastPressedTimestamp > buttonKyDebounceInterval) {
+                  if (buttons[4].currentState) {
+                      buttons[4].isPressed = true;
+                      buttons[4].lastPressedTimestamp = currentTimestamp;
+                      digitalWrite (KY_LED, HIGH);
+                  } else {
+                      buttons[4].isReleased = true;
+                      buttons[4].lastReleasedTimestamp = currentTimestamp;
+                  }
+              }
+              buttons[4].lastState = buttons[4].currentState;
+            }
 
         // Iterate over all buttons in struct-array
-        for (uint8_t i=0; i < sizeof(buttons) / sizeof(buttons[0]); i++) {
+        for (uint8_t i=0; i < sizeof(buttons) / sizeof(buttons[1]); i++) {
             if (buttons[i].currentState != buttons[i].lastState && currentTimestamp - buttons[i].lastPressedTimestamp > buttonDebounceInterval) {
                 if (!buttons[i].currentState) {
                     buttons[i].isPressed = true;
@@ -489,20 +513,12 @@ void doButtonActions(void) {
                     switch (i)      // Long-press-actions
                     {
                     case 0:
-                        //trackControlToQueueSender(LASTTRACK);
-                        // Logic change to change volume +2
-                        currentVolume = lastVolume+2;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
+                        trackControlToQueueSender(LASTTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 1:
-                        //trackControlToQueueSender(FIRSTTRACK);
-                        // Logic change to change volume -2
-                        currentVolume = lastVolume-2;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
+                        trackControlToQueueSender(FIRSTTRACK);
                         buttons[i].isPressed = false;
                         break;
 
@@ -513,6 +529,12 @@ void doButtonActions(void) {
 
                     case 3:
                         gotoSleep = true;
+                        break;
+
+                    case 4:
+                        // No action on long press
+                        logger((char *) FPSTR(button4Long), LOGLEVEL_DEBUG);
+                        buttons[i].isPressed = false;
                         break;
                     }
                 } else {
@@ -535,6 +557,12 @@ void doButtonActions(void) {
 
                     case 3:
                         //gotoSleep = true;
+                        break;
+
+                    case 4:
+                        //No action on short press
+                        logger((char *) FPSTR(button4Short), LOGLEVEL_DEBUG);
+                        buttons[i].isPressed = false;
                         break;
                     }
                 }
@@ -2906,7 +2934,14 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
 void setup() {
     Serial.begin(115200);
     srand(esp_random());
+
+    // KY-027 sensor setup
     pinMode(POWER, OUTPUT);
+    pinMode (KY_LED, OUTPUT) ; // Initialisierung Ausgangspin
+    pinMode (KY_SENSOR, INPUT) ; // Initialisierung Sensorpin
+    digitalWrite(KY_SENSOR, HIGH); // Aktivierung interner Pull-Up Widerstand
+    // KY-027 sensor setup finished
+
     digitalWrite(POWER, HIGH);
     prefsRfid.begin((char *) FPSTR(prefsRfidNamespace));
     prefsSettings.begin((char *) FPSTR(prefsSettingsNamespace));
