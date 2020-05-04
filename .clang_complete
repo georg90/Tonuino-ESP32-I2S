@@ -1,6 +1,7 @@
 -IC:/Users/Georg/Documents/Arduino/Tonuino-ESP32-fancy/include
 -IC:/Users/Georg/Documents/Arduino/Tonuino-ESP32-fancy/src
 -IC:/Users/Georg/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src
+-IC:/Users/Georg/.platformio/lib/RemoteDebug_ID1266/src
 -IC:/Users/Georg/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src
 -IC:/Users/Georg/Documents/Arduino/Tonuino-ESP32-fancy/lib/nvsdump/src
 -IC:/Users/Georg/Documents/Arduino/Tonuino-ESP32-fancy/.pio/libdeps/nodemcu-32s/ESP Async WebServer_ID306/src

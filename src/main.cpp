@@ -2,6 +2,7 @@
 #define MQTT_ENABLE
 #define FTP_ENABLE
 //#define NEOPIXEL_ENABLE
+#define REMOTE_DEBUG_ENABLE
 
 #include <ESP32Encoder.h>
 #include "Arduino.h"
@@ -30,7 +31,9 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <nvsDump.h>
-
+#ifdef REMOTE_DEBUG_ENABLE
+  #include <RemoteDebug.h>
+#endif
 // Info-docs:
 // https://docs.aws.amazon.com/de_de/freertos-kernel/latest/dg/queue-management.html
 // https://arduino-esp8266.readthedocs.io/en/latest/PROGMEM.html#how-do-i-declare-a-global-flash-string-and-use-it
@@ -280,6 +283,11 @@ TaskHandle_t rfid;
     FtpServer ftpSrv;
 #endif
 
+// Remote Debugger
+#ifdef REMOTE_DEBUG_ENABLE
+    RemoteDebug Debug;
+#endif
+
 // Info: SSID / password are stored in NVS
 WiFiClient wifiClient;
 IPAddress myIP;
@@ -368,17 +376,24 @@ wl_status_t wifiManager(void);
 /* Wrapper-Funktion for Serial-logging (with newline) */
 void loggerNl(const char *str, const uint8_t logLevel) {
   if (serialDebug >= logLevel) {
-    Serial.println(str);
+    #ifdef REMOTE_DEBUG_ENABLE
+      Debug.println(str);
+    #else
+      Serial.println(str);
+    #endif
   }
 }
 
 /* Wrapper-Funktion for Serial-Logging (without newline) */
 void logger(const char *str, const uint8_t logLevel) {
   if (serialDebug >= logLevel) {
-    Serial.print(str);
+    #ifdef REMOTE_DEBUG_ENABLE
+      Debug.printf(str);
+    #else
+      Serial.println(str);
+    #endif
   }
 }
-
 
 int countChars(const char* string, char ch) {
     int count = 0;
@@ -2526,6 +2541,13 @@ wl_status_t wifiManager(void) {
             #ifdef FTP_ENABLE
                 ftpSrv.begin(ftpUser, ftpPassword);
             #endif
+
+            // enable remote debugging to telnet if enabled
+            #ifdef REMOTE_DEBUG_ENABLE
+                #define DEBUG_DEVICE_HOSTNAME "Tonuino"
+                Debug.begin(DEBUG_DEVICE_HOSTNAME);
+                Debug.setSerialEnabled(true);
+            #endif
         } else { // Starts AP if WiFi-connect wasn't successful
             accessPointStart((char *) FPSTR(accessPointNetworkSSID), apIP, apNetmask);
         }
@@ -3172,6 +3194,9 @@ void loop() {
         if (ftpSrv.isConnected()) {
             lastTimeActiveTimestamp = millis();     // Re-adjust timer while client is connected to avoid ESP falling asleep
         }
+    #endif
+    #ifdef REMOTE_DEBUG_ENABLE
+      Debug.handle();
     #endif
 }
 
