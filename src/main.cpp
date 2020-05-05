@@ -489,20 +489,12 @@ void doButtonActions(void) {
                     switch (i)      // Long-press-actions
                     {
                     case 0:
-                        //trackControlToQueueSender(LASTTRACK);
-                        // Logic change to change volume +2
-                        currentVolume = lastVolume+2;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
+                        trackControlToQueueSender(NEXTTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 1:
-                        //trackControlToQueueSender(FIRSTTRACK);
-                        // Logic change to change volume -2
-                        currentVolume = lastVolume-2;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
+                        trackControlToQueueSender(PREVIOUSTRACK);
                         buttons[i].isPressed = false;
                         break;
 
@@ -519,12 +511,20 @@ void doButtonActions(void) {
                     switch (i)      // Short-press-actions
                     {
                     case 0:
-                        trackControlToQueueSender(NEXTTRACK);
+                        //trackControlToQueueSender(LASTTRACK);
+                        // Logic change to change volume +2
+                        currentVolume = lastVolume+1;
+                        lastVolume = currentVolume;
+                        volumeToQueueSender(currentVolume);
                         buttons[i].isPressed = false;
                         break;
 
                     case 1:
-                        trackControlToQueueSender(PREVIOUSTRACK);
+                        //trackControlToQueueSender(FIRSTTRACK);
+                        // Logic change to change volume -2
+                        currentVolume = lastVolume-1;
+                        lastVolume = currentVolume;
+                        volumeToQueueSender(currentVolume);
                         buttons[i].isPressed = false;
                         break;
 
