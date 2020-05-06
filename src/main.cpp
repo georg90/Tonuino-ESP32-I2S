@@ -1,8 +1,9 @@
 // Define modules to compile:
 #define MQTT_ENABLE
 #define FTP_ENABLE
-//#define NEOPIXEL_ENABLE
+#define NEOPIXEL_ENABLE
 #define REMOTE_DEBUG_ENABLE
+//#define AUDIO_FEEDBACK_ENABLE
 
 #include <ESP32Encoder.h>
 #include "Arduino.h"
@@ -86,7 +87,7 @@ char logBuf[160];                                   // Buffer for all log-messag
 
 // Neopixel-configuration
 #ifdef NEOPIXEL_ENABLE
-    #define NUM_LEDS                    24          // number of LEDs
+    #define NUM_LEDS                    1          // number of LEDs
     #define CHIPSET                     WS2812B     // type of Neopixel
     #define COLOR_ORDER                 GRB
 #endif
@@ -112,7 +113,7 @@ char logBuf[160];                                   // Buffer for all log-messag
 #define ALL_TRACKS_OF_DIR_RANDOM_LOOP   9           // Play all files of a directory (randomized) in infinite-loop
 #define WEBSTREAM                       8           // Play webradio-stream
 #define BUSY                            10          // Used if playlist is created
-
+#define AUDIO_FEEDBACK                  11          // User for audio feedbacks
 // RFID-modifcation-types
 #define LOCK_BUTTONS_MOD                100         // Locks all buttons and rotary encoder
 #define SLEEP_TIMER_MOD_15              101         // Puts uC into deepsleep after 15 minutes + LED-DIMM
@@ -384,6 +385,16 @@ void loggerNl(const char *str, const uint8_t logLevel) {
   }
 }
 
+/* Wrapper for audio feedback */
+void playAudioFeedback(const char *str) {
+  loggerNl((char *) FPSTR(playingfilenow), LOGLEVEL_NOTICE);
+  char *filename = (char *) malloc(sizeof(char) * 255);
+  strncpy(filename, str, 255);
+  loggerNl((char *) filename, LOGLEVEL_NOTICE);
+  trackQueueDispatcher(filename, 0, 11, 0);
+}
+
+
 /* Wrapper-Funktion for Serial-Logging (without newline) */
 void logger(const char *str, const uint8_t logLevel) {
   if (serialDebug >= logLevel) {
@@ -489,16 +500,25 @@ void doButtonActions(void) {
                     switch (i)      // Long-press-actions
                     {
                     case 0:
+                        #ifdef AUDIO_FEEDBACK_ENABLE
+                            playAudioFeedback("/audio_commands/02_next_track.mp3");
+                        #endif
                         trackControlToQueueSender(NEXTTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 1:
+                        #ifdef AUDIO_FEEDBACK_ENABLE
+                            playAudioFeedback("/audio_commands/03_prev_track.mp3");
+                        #endif
                         trackControlToQueueSender(PREVIOUSTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 2:
+                        #ifdef AUDIO_FEEDBACK_ENABLE
+                            playAudioFeedback("/audio_commands/04_pause_play.mp3");
+                        #endif
                         trackControlToQueueSender(PAUSEPLAY);
                         buttons[i].isPressed = false;
                         break;
@@ -529,6 +549,9 @@ void doButtonActions(void) {
                         break;
 
                     case 2:
+                        #ifdef AUDIO_FEEDBACK_ENABLE
+                            playAudioFeedback("/audio_commands/04_pause_play.mp3");
+                        #endif
                         trackControlToQueueSender(PAUSEPLAY);
                         buttons[i].isPressed = false;
                         break;
@@ -1163,7 +1186,12 @@ void playAudio(void *parameter) {
                 audio.stopSong();
                 snprintf(logBuf, sizeof(logBuf) / sizeof(logBuf[0]), "%s mit %d Titel(n)", (char *) FPSTR(newPlaylistReceived), playProperties.numberOfTracks);
                 loggerNl(logBuf, LOGLEVEL_NOTICE);
-
+                // TODO - added for audio feedback
+                if (playProperties.playMode == AUDIO_FEEDBACK) {
+                  audio.connecttoSD(*(playProperties.playlist + playProperties.currentTrackNumber));
+                  playProperties.trackFinished = true;
+                  continue;
+                }
                 // If we're in audiobook-mode and apply a modification-card, we don't
                 // want to save lastPlayPosition for the mod-card but for the card that holds the playlist
                 strncpy(playProperties.playRfidTag, currentRfidTagId, sizeof(playProperties.playRfidTag) / sizeof(playProperties.playRfidTag[0]));
@@ -1428,6 +1456,8 @@ void playAudio(void *parameter) {
                     continue;
                 } else {
                     audio.connecttoSD(*(playProperties.playlist + playProperties.currentTrackNumber));
+                    //DEBUG
+                    loggerNl(*(playProperties.playlist + playProperties.currentTrackNumber), LOGLEVEL_ERROR);
                     #ifdef NEOPIXEL_ENABLE
                         showPlaylistProgress = true;
                     #endif
@@ -1477,6 +1507,7 @@ void playAudio(void *parameter) {
 void rfidScanner(void *parameter) {
     static MFRC522 mfrc522(RFID_CS, RST_PIN);
     SPI.begin();
+    if (mfrc522.PCD_PerformSelfTest()) Serial.println("Passed Self-Test");
     mfrc522.PCD_Init();
     mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader detail
     delay(4);
@@ -1487,7 +1518,7 @@ void rfidScanner(void *parameter) {
     for (;;) {
         esp_task_wdt_reset();
         vTaskDelay(10);
-        if ((millis() - lastRfidCheckTimestamp) >= 300) {
+        if ((millis() - lastRfidCheckTimestamp) >= 100) {
             lastRfidCheckTimestamp = millis();
             // Reset the loop if no new card is present on the sensor/reader. This saves the entire process when idle.
 
@@ -1905,6 +1936,9 @@ void trackQueueDispatcher(const char *_itemToPlay, const uint32_t _lastPlayPos, 
         publishMqtt((char *) FPSTR(topicLedBrightnessState), 0, false);
         publishMqtt((char *) FPSTR(topicPlaymodeState), playProperties.playMode, false);
     #endif
+
+
+
     if (_playMode != WEBSTREAM) {
         musicFiles = returnPlaylistFromSD(SD.open(filename));
     } else {
@@ -1948,6 +1982,12 @@ void trackQueueDispatcher(const char *_itemToPlay, const uint32_t _lastPlayPos, 
                 publishMqtt((char *) FPSTR(topicPlaymodeState), playProperties.playMode, false);
                 publishMqtt((char *) FPSTR(topicRepeatModeState), NO_REPEAT, false);
             #endif
+            xQueueSend(trackQueue, &(musicFiles), 0);
+            break;
+        }
+
+        case AUDIO_FEEDBACK: {
+            loggerNl((char *) FPSTR(modeAudioFeedback), LOGLEVEL_NOTICE);
             xQueueSend(trackQueue, &(musicFiles), 0);
             break;
         }
@@ -3168,6 +3208,9 @@ void setup() {
     }
     bootComplete = true;
 
+    #ifdef AUDIO_FEEDBACK_ENABLE
+        playAudioFeedback("/audio_commands/01_welcome.mp3");
+    #endif
     /*char *sdC = (char *) calloc(16384, sizeof(char));
     printSdContent(SD.open("/", FILE_READ), 16384, 1, sdC, 2);
     printSdContent(SD.open("/", FILE_READ), 16384, 1, sdC, 2);
