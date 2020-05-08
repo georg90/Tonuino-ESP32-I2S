@@ -129,14 +129,16 @@ char logBuf[160];                                   // Buffer for all log-messag
 // Define audio feedback files
 char *specialFiles[] PROGMEM = {
   NULL,
-  "/audio_commands/01_stop.mp3", // not used
-  "/audio_commands/02_play.mp3", // not used
-  "/audio_commands/03_pause_play.mp3", // not used
-  "/audio_commands/04_next_track.mp3",
-  "/audio_commands/05_prev_track.mp3",
-  "/audio_commands/06_first_track.mp3", // not used
-  "/audio_commands/07_last_track.mp3", // not used
-  "/audio_commands/08_startup.mp3"
+  "/audio_commands/01_stop.mp3", // not used (ID 1)
+  "/audio_commands/02_play.mp3", // not used (ID 2)
+  "/audio_commands/03_pause_play.mp3", // not used (ID 3)
+  "/audio_commands/04_next_track.mp3", // ID 4
+  "/audio_commands/05_prev_track.mp3", // ID 5
+  "/audio_commands/06_first_track.mp3", // not used ID 6
+  "/audio_commands/07_last_track.mp3", // not used ID 7
+  "/audio_commands/08_startup.mp3", // ID 8
+  "/audio_commands/09_error.mp3", // not used ID 9
+  "/audio_commands/10_start_stream.mp3" // not used ID 10
 };
 
 // Repeat-Modes
@@ -503,25 +505,22 @@ void doButtonActions(void) {
                     switch (i)      // Long-press-actions
                     {
                     case 0:
-                        #ifdef AUDIO_FEEDBACK_ENABLE
-                            playProperties.specialFileNumber = NEXTTRACK;
-                        #endif
+                        // #ifdef AUDIO_FEEDBACK_ENABLE
+                        //     playProperties.specialFileNumber = NEXTTRACK;
+                        // #endif
                         trackControlToQueueSender(NEXTTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 1:
-                        #ifdef AUDIO_FEEDBACK_ENABLE
-                            playProperties.specialFileNumber = PREVIOUSTRACK;
-                        #endif
+                        // #ifdef AUDIO_FEEDBACK_ENABLE
+                        //     playProperties.specialFileNumber = PREVIOUSTRACK;
+                        // #endif
                         trackControlToQueueSender(PREVIOUSTRACK);
                         buttons[i].isPressed = false;
                         break;
 
                     case 2:
-                        // #ifdef AUDIO_FEEDBACK_ENABLE
-                        //     playProperties.specialFileNumber = PAUSEPLAY;
-                        // #endif
                         trackControlToQueueSender(PAUSEPLAY);
                         buttons[i].isPressed = false;
                         break;
@@ -552,9 +551,6 @@ void doButtonActions(void) {
                         break;
 
                     case 2:
-                        // #ifdef AUDIO_FEEDBACK_ENABLE
-                        //     playProperties.specialFileNumber = PAUSEPLAY;
-                        // #endif
                         trackControlToQueueSender(PAUSEPLAY);
                         buttons[i].isPressed = false;
                         break;
