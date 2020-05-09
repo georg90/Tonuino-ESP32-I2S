@@ -46,7 +46,7 @@
 #define LOGLEVEL_DEBUG                  4           // almost everything
 
 // Serial-logging-configuration
-const uint8_t serialDebug = LOGLEVEL_DEBUG;          // Current loglevel for serial console
+const uint8_t serialDebug = LOGLEVEL_NOTICE;          // Current loglevel for serial console
 
 // Serial-logging buffer
 char logBuf[160];                                   // Buffer for all log-messages
@@ -113,7 +113,6 @@ char logBuf[160];                                   // Buffer for all log-messag
 #define ALL_TRACKS_OF_DIR_RANDOM_LOOP   9           // Play all files of a directory (randomized) in infinite-loop
 #define WEBSTREAM                       8           // Play webradio-stream
 #define BUSY                            10          // Used if playlist is created
-#define ALL_TRACKS_DIR_RAND_LOOP_STOP   9           // Play all files of a directory (randomized) in infinite-loop but stop after each track
 
 // RFID-modifcation-types
 #define LOCK_BUTTONS_MOD                100         // Locks all buttons and rotary encoder
@@ -143,7 +142,8 @@ char *specialFiles[] PROGMEM = {
   "/audio_commands/09_error.mp3", // not used ID 9
   "/audio_commands/10_start_stream.mp3", // not used ID 10
   "/audio_commands/animals", // used for Babymode of keylock
-  "/audio_commands/12_end_babymode.mp3" // end of Babymode ID 12
+  "/audio_commands/12_end_babymode.mp3", // end of Babymode ID 12
+  "/audio_commands/13_start_babymode.mp3" // Beginn of Babymode ID13
 };
 
 // Repeat-Modes
@@ -2571,6 +2571,10 @@ void rfidPreferenceLookupHandler (void) {
                   //playProperties.playMode = NO_PLAYLIST; // Stopping audio output after song
                 } else {
                   doRfidCardModifications(_playMode);
+                  #ifdef AUDIO_FEEDBACK_ENABLE
+                    trackQueueDispatcher(specialFiles[13], 0, SINGLE_TRACK, 0);
+                    delay(5000); // wait for the file to be finished (ugly, try to enhance later..)
+                  #endif
                   trackQueueDispatcher(specialFiles[11], 0, ALL_TRACKS_OF_DIR_RANDOM_LOOP, 0);
                 }
             } else {
