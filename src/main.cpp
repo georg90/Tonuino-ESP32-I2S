@@ -113,6 +113,8 @@ char logBuf[160];                                   // Buffer for all log-messag
 #define ALL_TRACKS_OF_DIR_RANDOM_LOOP   9           // Play all files of a directory (randomized) in infinite-loop
 #define WEBSTREAM                       8           // Play webradio-stream
 #define BUSY                            10          // Used if playlist is created
+#define ALL_TRACKS_DIR_RAND_LOOP_STOP   9           // Play all files of a directory (randomized) in infinite-loop but stop after each track
+
 // RFID-modifcation-types
 #define LOCK_BUTTONS_MOD                100         // Locks all buttons and rotary encoder
 #define SLEEP_TIMER_MOD_15              101         // Puts uC into deepsleep after 15 minutes + LED-DIMM
@@ -124,6 +126,7 @@ char logBuf[160];                                   // Buffer for all log-messag
 #define SLEEP_AFTER_5_TRACKS            107         // Puts uC into deepsleep after five tracks
 #define REPEAT_PLAYLIST                 110         // Changes active playmode to endless-loop (for a playlist)
 #define REPEAT_TRACK                    111         // Changes active playmode to endless-loop (for a single track)
+#define LOCK_BUTTONS_BABY_MOD           50          // Reassign buttons to play animal noises randomly
 #define DIMM_LEDS_NIGHTMODE             120         // Changes LED-brightness
 
 // Define audio feedback files
@@ -132,13 +135,15 @@ char *specialFiles[] PROGMEM = {
   "/audio_commands/01_stop.mp3", // not used (ID 1)
   "/audio_commands/02_play.mp3", // not used (ID 2)
   "/audio_commands/03_pause_play.mp3", // not used (ID 3)
-  "/audio_commands/04_next_track.mp3", // ID 4
-  "/audio_commands/05_prev_track.mp3", // ID 5
+  "/audio_commands/04_next_track.mp3", // ID 4 not used
+  "/audio_commands/05_prev_track.mp3", // ID 5 not used
   "/audio_commands/06_first_track.mp3", // not used ID 6
   "/audio_commands/07_last_track.mp3", // not used ID 7
   "/audio_commands/08_startup.mp3", // ID 8
   "/audio_commands/09_error.mp3", // not used ID 9
-  "/audio_commands/10_start_stream.mp3" // not used ID 10
+  "/audio_commands/10_start_stream.mp3", // not used ID 10
+  "/audio_commands/animals", // used for Babymode of keylock
+  "/audio_commands/12_end_babymode.mp3" // end of Babymode ID 12
 };
 
 // Repeat-Modes
@@ -230,6 +235,7 @@ unsigned long lastTimeActiveTimestamp = 0;              // Timestamp of last use
 unsigned long sleepTimerStartTimestamp = 0;             // Flag if sleep-timer is active
 bool gotoSleep = false;                                 // Flag for turning uC immediately into deepsleep
 bool lockControls = false;                              // Flag if buttons and rotary encoder is locked
+bool lockControlsBaby = false;                          // Flag if buttons are locked (Babymode; play random animal noises on button press)
 bool bootComplete = false;
 // Rotary encoder-helper
 int32_t lastEncoderValue;
@@ -497,7 +503,6 @@ void doButtonActions(void) {
     if (lockControls) {
         return; // Avoid button-handling if buttons are locked
     }
-
     for (uint8_t i=0; i < sizeof(buttons) / sizeof(buttons[0]); i++) {
         if (buttons[i].isPressed) {
             if (buttons[i].lastReleasedTimestamp > buttons[i].lastPressedTimestamp) {
@@ -521,9 +526,16 @@ void doButtonActions(void) {
                         break;
 
                     case 2:
-                        trackControlToQueueSender(PAUSEPLAY);
-                        buttons[i].isPressed = false;
-                        break;
+                        // Lock controls (Baby mode) is set?
+                        if (lockControlsBaby) {
+                          trackControlToQueueSender(NEXTTRACK);
+                          buttons[i].isPressed = false;
+                          break;
+                        } else {
+                          trackControlToQueueSender(PAUSEPLAY);
+                          buttons[i].isPressed = false;
+                          break;
+                        }
 
                     case 3:
                         gotoSleep = true;
@@ -533,27 +545,48 @@ void doButtonActions(void) {
                     switch (i)      // Short-press-actions
                     {
                     case 0:
+                        // Lock controls (Baby mode) is set?
+                        if (lockControlsBaby) {
+                          trackControlToQueueSender(NEXTTRACK);
+                          buttons[i].isPressed = false;
+                          break;
+                        } else {
+                          currentVolume = lastVolume+1;
+                          lastVolume = currentVolume;
+                          volumeToQueueSender(currentVolume);
+                          buttons[i].isPressed = false;
+                          break;
+                        }
                         //trackControlToQueueSender(LASTTRACK);
                         // Logic change to change volume +2
-                        currentVolume = lastVolume+1;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
-                        buttons[i].isPressed = false;
-                        break;
 
                     case 1:
+                        if (lockControlsBaby) {
+                          trackControlToQueueSender(NEXTTRACK);
+                          buttons[i].isPressed = false;
+                          break;
+                        } else {
+                          currentVolume = lastVolume-1;
+                          lastVolume = currentVolume;
+                          volumeToQueueSender(currentVolume);
+                          buttons[i].isPressed = false;
+                          break;
+                        }
                         //trackControlToQueueSender(FIRSTTRACK);
                         // Logic change to change volume -2
-                        currentVolume = lastVolume-1;
-                        lastVolume = currentVolume;
-                        volumeToQueueSender(currentVolume);
-                        buttons[i].isPressed = false;
-                        break;
+
 
                     case 2:
-                        trackControlToQueueSender(PAUSEPLAY);
-                        buttons[i].isPressed = false;
-                        break;
+                        // Lock controls (Baby mode) is set?
+                        if (lockControlsBaby) {
+                          trackControlToQueueSender(NEXTTRACK);
+                          buttons[i].isPressed = false;
+                          break;
+                        } else {
+                          trackControlToQueueSender(PAUSEPLAY);
+                          buttons[i].isPressed = false;
+                          break;
+                        }
 
                     case 3:
                         //gotoSleep = true;
@@ -1226,6 +1259,13 @@ void playAudio(void *parameter) {
                         showRewind = true;
                     #endif
                 }
+
+                // Check if Baby Mode is enabled
+                if (lockControlsBaby && !playProperties.pausePlay) {
+                  // don't reset clock for trackFinished when Baby mode is active
+                  loggerNl("Baby mode active - not auto playing", LOGLEVEL_INFO);
+                  trackControlToQueueSender(PAUSEPLAY);
+                }
             }
 
             if (playProperties.playlistFinished && trackCommand != 0) {
@@ -1236,6 +1276,7 @@ void playAudio(void *parameter) {
                 #endif
                 continue;
             }
+
             /* Check if track-control was called
                (stop, start, next track, prev. track, last track, first track...) */
             switch (trackCommand) {
@@ -1511,7 +1552,8 @@ void playAudio(void *parameter) {
 void rfidScanner(void *parameter) {
     static MFRC522 mfrc522(RFID_CS, RST_PIN);
     SPI.begin();
-    if (mfrc522.PCD_PerformSelfTest()) Serial.println("Passed Self-Test");
+    //if (mfrc522.PCD_PerformSelfTest()) Serial.println("Passed Self-Test");
+    delay(1);
     mfrc522.PCD_Init();
     mfrc522.PCD_DumpVersionToSerial();  // Show details of PCD - MFRC522 Card Reader detail
     delay(4);
@@ -2127,6 +2169,21 @@ void doRfidCardModifications(const uint32_t mod) {
             }
             break;
 
+            case LOCK_BUTTONS_BABY_MOD:      // Locks/unlocks all buttons
+                lockControlsBaby = !lockControlsBaby;
+                if (lockControlsBaby) {
+                    loggerNl((char *) FPSTR(modificatorAllButtonsLockedBaby), LOGLEVEL_NOTICE);
+                    #ifdef NEOPIXEL_ENABLE
+                        showLedOk = true;
+                    #endif
+                } else {
+                    loggerNl((char *) FPSTR(modificatorAllButtonsUnlockedBaby), LOGLEVEL_NOTICE);
+                    #ifdef NEOPIXEL_ENABLE
+                        showLedOk = true;
+                    #endif
+                }
+                break;
+
         case SLEEP_TIMER_MOD_15:    // Puts/undo uC to sleep after 15 minutes
             if (sleepTimer == 15) {
                 sleepTimerStartTimestamp = 0;
@@ -2506,6 +2563,16 @@ void rfidPreferenceLookupHandler (void) {
         // Only pass file to queue if strtok revealed 3 items
             if (_playMode >= 100) {
                 doRfidCardModifications(_playMode);
+            }
+            else if (_playMode == LOCK_BUTTONS_BABY_MOD) {
+                if (lockControlsBaby) {
+                  doRfidCardModifications(_playMode);
+                  trackQueueDispatcher(specialFiles[12], 0, SINGLE_TRACK, 0);
+                  //playProperties.playMode = NO_PLAYLIST; // Stopping audio output after song
+                } else {
+                  doRfidCardModifications(_playMode);
+                  trackQueueDispatcher(specialFiles[11], 0, ALL_TRACKS_OF_DIR_RANDOM_LOOP, 0);
+                }
             } else {
                 trackQueueDispatcher(_file, _lastPlayPos, _playMode, _trackLastPlayed);
             }
