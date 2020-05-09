@@ -103,6 +103,7 @@ static const char mgtWebsite[] PROGMEM = "<!DOCTYPE html>\
                 <label for=\"modId\">Abspielmodus</label>\
                 <select class=\"form-control\" id=\"modId\" name=\"modId\">\
                     <option value=\"100\">Tastensperre</option>\
+                    <option value=\"50\">Tastensperre(Babymodus)</option>\
                     <option value=\"101\">Schlafen nach 15 Minuten</option>\
                     <option value=\"102\">Schlafen nach 30 Minuten</option>\
                     <option value=\"103\">Schlafen nach 1 Stunde</option>\
