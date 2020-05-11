@@ -1,11 +1,26 @@
 # Tonuino based on ESP32 with I2S-DAC-support
 
 ## Modifications made by @georg90 (myself)
-* Implemented Babymode (Modification card) Any button press will just forward to another animal sound (instead of doing nothing)
-* Added RemoteDebugger (Use via Telnet)
-* Added Audio Feedback (enable via `#define`)
+* Implemented Babymode (Modification card) Any button press will just forward to another animal sound (instead of doing nothing) (files are in `mp3/audio_commands/animals`)
+* Added RemoteDebugger (Use via Telnet to see debug messages)
+* Added Audio Feedback (enable via `#define`) Files can be found in `mp3` folder (thanks @biologist79 for support on this one)
+* MQTT used user/pass now! Hardcoded values are used, need to be changed in code
+* MQTT publishes under one topic `Tonuino` now (easier with Home Assistant ;-))
 
 
+## Still ToDo
+* Write some more explaination
+* Implement game "Memory"
+* Implement counting game
+* More modification cards (KITA mode etc.)
+* Enhance audio feedback (next track; starting webstream etc.)
+* Make user/pass of MQTT configurable via Webinterface
+* Make loglevel adjustable (for easier debuggging)
+* Optimize recognition of cards / quicker action
+* Spotify remove (Modification card to conrol spotify with the box)
+
+## Kudos
+Thanks a lot to @biologist79 for his awesome work. I think this is a very good basis for expanding to additional features (like the original project) but with FTP / Wifi / webstreams etc. Great job!
 
 
 ## Disclaimer

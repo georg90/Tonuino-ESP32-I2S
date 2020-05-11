@@ -128,7 +128,7 @@ char logBuf[160];                                   // Buffer for all log-messag
 #define LOCK_BUTTONS_BABY_MOD           50          // Reassign buttons to play animal noises randomly
 #define DIMM_LEDS_NIGHTMODE             120         // Changes LED-brightness
 
-// Define audio feedback files
+// Define audio feedback files (ORDER IS VERY INPORTANT! CHANGES WILL BREAK THE AUDIO OUTPUT)
 char *specialFiles[] PROGMEM = {
   NULL,
   "/audio_commands/01_stop.mp3", // not used (ID 1)
@@ -252,11 +252,11 @@ bool accessPointStarted = false;
 
 
 // MQTT-configuration
-char mqtt_server[16] = "192.168.1.100";                  // IP-address of MQTT-server (if not found in NVS this one will be taken)
+char mqtt_server[16] = "192.168.0.100";                  // IP-address of MQTT-server (if not found in NVS this one will be taken)
 #ifdef MQTT_ENABLE
     #define DEVICE_HOSTNAME "ESP32-Tonuino"                 // Name that that is used for MQTT
-    #define DEVICE_USER "sensor"
-    #define DEVICE_PASS "steffigeorg"
+    #define DEVICE_USER "sensor" // example user
+    #define DEVICE_PASS "steffigeorg" // example pass
     static const char topicSleepCmnd[] PROGMEM = "Tonuino/Cmnd/Sleep";
     static const char topicSleepState[] PROGMEM = "Tonuino/State/Sleep";
     static const char topicTrackCmnd[] PROGMEM = "Tonuino/Cmnd/Track";
