@@ -87,7 +87,7 @@ char logBuf[160];                                   // Buffer for all log-messag
 
 // Neopixel-configuration
 #ifdef NEOPIXEL_ENABLE
-    #define NUM_LEDS                    1          // number of LEDs
+    #define NUM_LEDS                    1          // number of LEDs (default 24)
     #define CHIPSET                     WS2812B     // type of Neopixel
     #define COLOR_ORDER                 GRB
 #endif
@@ -194,7 +194,7 @@ bool enableMqtt = true;
 // RFID
 uint8_t const cardIdSize = 4;                           // RFID
 // Volume
-uint8_t maxVolume = 21;                                 // Maximum volume that can be adjusted
+uint8_t maxVolume = 15;                                 // Maximum volume that can be adjusted
 uint8_t minVolume = 0;                                  // Lowest volume that can be adjusted
 uint8_t initVolume = 3;                                 // 0...21 (If not found in NVS, this one will be taken)
 // Sleep
@@ -513,17 +513,27 @@ void doButtonActions(void) {
                         // #ifdef AUDIO_FEEDBACK_ENABLE
                         //     playProperties.specialFileNumber = NEXTTRACK;
                         // #endif
-                        trackControlToQueueSender(NEXTTRACK);
+                        currentVolume = lastVolume+1;
+                        lastVolume = currentVolume;
+                        volumeToQueueSender(currentVolume);
                         buttons[i].isPressed = false;
                         break;
+                        //trackControlToQueueSender(NEXTTRACK);
+                        //buttons[i].isPressed = false;
+                        //break;
 
                     case 1:
                         // #ifdef AUDIO_FEEDBACK_ENABLE
                         //     playProperties.specialFileNumber = PREVIOUSTRACK;
                         // #endif
-                        trackControlToQueueSender(PREVIOUSTRACK);
+                        currentVolume = lastVolume-1;
+                        lastVolume = currentVolume;
+                        volumeToQueueSender(currentVolume);
                         buttons[i].isPressed = false;
                         break;
+                        // trackControlToQueueSender(PREVIOUSTRACK);
+                        // buttons[i].isPressed = false;
+                        // break;
 
                     case 2:
                         // Lock controls (Baby mode) is set?
@@ -551,9 +561,12 @@ void doButtonActions(void) {
                           buttons[i].isPressed = false;
                           break;
                         } else {
-                          currentVolume = lastVolume+1;
-                          lastVolume = currentVolume;
-                          volumeToQueueSender(currentVolume);
+                          // currentVolume = lastVolume+1;
+                          // lastVolume = currentVolume;
+                          // volumeToQueueSender(currentVolume);
+                          // buttons[i].isPressed = false;
+                          // break;
+                          trackControlToQueueSender(NEXTTRACK);
                           buttons[i].isPressed = false;
                           break;
                         }
@@ -566,9 +579,12 @@ void doButtonActions(void) {
                           buttons[i].isPressed = false;
                           break;
                         } else {
-                          currentVolume = lastVolume-1;
-                          lastVolume = currentVolume;
-                          volumeToQueueSender(currentVolume);
+                          // currentVolume = lastVolume-1;
+                          // lastVolume = currentVolume;
+                          // volumeToQueueSender(currentVolume);
+                          // buttons[i].isPressed = false;
+                          // break;
+                          trackControlToQueueSender(PREVIOUSTRACK);
                           buttons[i].isPressed = false;
                           break;
                         }
