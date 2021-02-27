@@ -1,11 +1,11 @@
-# Tonuino based on ESP32 with I2S-DAC-support
+# ESPuino based on ESP32 with I2S-DAC-support
 
 ## Modifications made by @georg90 (myself)
 * Implemented Babymode (Modification card) Any button press will just forward to another animal sound (instead of doing nothing) (files are in `mp3/audio_commands/animals`)
 * Added RemoteDebugger (Use via Telnet to see debug messages)
 * Added Audio Feedback (enable via `#define`) Files can be found in `mp3` folder (thanks @biologist79 for support on this one)
 * MQTT used user/pass now! Hardcoded values are used, need to be changed in code
-* MQTT publishes under one topic `Tonuino` now (easier with Home Assistant ;-))
+* MQTT publishes under one topic `ESPuino` now (easier with Home Assistant ;-))
 
 
 ## Still ToDo
@@ -33,7 +33,7 @@ The original project makes use of microcontrollers (uC) like Arduino nano (which
 The core of my implementation is based on the popular [ESP32 by Espressif](https://www.espressif.com/en/products/hardware/esp32/overview). Having WiFi-support out-of-the-box makes it possible to provide further features like an integrated FTP-server (to feed the player with music), smarthome-integration via MQTT and webradio. However, my primary focus was to port the project to a modular base. Said this mp3-decoding is done in software with a dedicated uSD-card-slot and music-output is done via I2S-protocol. I did all my tests on [Adafruit's MAX98357A](https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/pinouts). Hopefully, not only in theory, other DACs can be used as well.
 
 ## Basic concept/handling
-The basic idea of Tonuino (and my fork, respectively) is to provide a way, to use the Arduino-platform for a music-control-concept that supports locally stored music-files instead of being fully cloud-dependend. This basically means that RFID-tags are used to direct a music-player. Even for kids this concept is simple: place an RFID-object (card, character) on top of a box and the music starts to play. Place another RFID-object on it and anything else is played. Simple as that.
+The basic idea of ESPuino (and my fork, respectively) is to provide a way, to use the Arduino-platform for a music-control-concept that supports locally stored music-files instead of being fully cloud-dependend. This basically means that RFID-tags are used to direct a music-player. Even for kids this concept is simple: place an RFID-object (card, character) on top of a box and the music starts to play. Place another RFID-object on it and anything else is played. Simple as that.
 
 ## Hardware-setup
 The heart of my project is an ESP32 on a development-board that more or less looks like [this](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp32/docs/index.html). If ordered in China (Aliexpress, eBay e.g.) it's pretty cheap (around 4€) but even in Europe it's only around 8€. Make sure to install the drivers for the USB/Serial-chip (CP2102 e.g.). If unsure have a look at eBay for "ESP32S" or "Lolin 32".
@@ -55,7 +55,7 @@ In the upper section of main.cpp you can specify the modules that should be comp
 Please note: if MQTT is enabled it's still possible to deactivate it via webgui.
 
 ## Wiring
-A lot of wiring is necessary to get ESP32-Tonuino working. After my first experients I soldered the stuff on a board in order to avoid wild-west-cabling. Especially for the interconnect between uC and uSD-card-reader make sure to use short wires (like 10cm or so)!
+A lot of wiring is necessary to get ESP32-ESPuino working. After my first experients I soldered the stuff on a board in order to avoid wild-west-cabling. Especially for the interconnect between uC and uSD-card-reader make sure to use short wires (like 10cm or so)!
 
 | ESP32 (GPIO)  | Hardware              | Pin    | Comment                                                      |
 | ------------- | --------------------- | ------ | ------------------------------------------------------------ |
@@ -106,11 +106,11 @@ Optionally, GPIO 17 can be used to drive a NPN-transistor (BC337-40) that pulls 
 * If you're using Arduino-IDE please make sure to change ESP32's partition-layout to `No OTA (2MB APP/2MB Spiffs)` as otherwise the sketch won't fit into the flash-memory.
 * compile and upload the sketch
 
-## Starting Tonuino-ESP32 first time
-After plugging in it takes a few seconds until neopixel indicates that Tonuino is ready (by four (slow) rotating LEDs). If uC was not able to connect to WiFi, an access-point (named Tonuino) is opened and after connecting this WiFi, a [configuration-Interface](http://192.168.4.1) is available. Enter WiFI-credentials, save them and restart the uC. Then reconnect to your "regular" WiFi. Now you're ready to got: place your favourite RFID-tag next to the RFID-reader and the music should start to play. While the playlist is generated, fast-rotating LEDs are shown. The more tracks a playlist/directory contains the longer this step takes.
+## Starting ESPuino-ESP32 first time
+After plugging in it takes a few seconds until neopixel indicates that ESPuino is ready (by four (slow) rotating LEDs). If uC was not able to connect to WiFi, an access-point (named ESPuino) is opened and after connecting this WiFi, a [configuration-Interface](http://192.168.4.1) is available. Enter WiFI-credentials, save them and restart the uC. Then reconnect to your "regular" WiFi. Now you're ready to got: place your favourite RFID-tag next to the RFID-reader and the music should start to play. While the playlist is generated, fast-rotating LEDs are shown. The more tracks a playlist/directory contains the longer this step takes.
 
-## After Tonuino-ESP32 is connected to your WiFi
-After connecting the Tonuino to your WiFi, the 'regular' Webgui is available at the IP assigned by the router. Using this GUI, you can configure:
+## After ESPuino-ESP32 is connected to your WiFi
+After connecting the ESPuino to your WiFi, the 'regular' Webgui is available at the IP assigned by the router. Using this GUI, you can configure:
 * WiFi
 * Binding between RFID-tag, file/directory/URL and playMode
 * Binding between RFID-tag and a modification-type
@@ -119,23 +119,23 @@ After connecting the Tonuino to your WiFi, the 'regular' Webgui is available at 
 * Initial volume, maximum volume, brightness of Neopixel and inactivity-time
 
 Webgui #1:
-<img src="https://raw.githubusercontent.com/biologist79/Tonuino-ESP32-I2S/master/pictures/Mgmt-GUI1.jpg" width="300">
+<img src="https://raw.githubusercontent.com/biologist79/ESPuino/master/pictures/Mgmt-GUI1.jpg" width="300">
 
 Webgui #2:
-<img src="https://raw.githubusercontent.com/biologist79/Tonuino-ESP32-I2S/master/pictures/Mgmt-GUI2.jpg" width="300">
+<img src="https://raw.githubusercontent.com/biologist79/ESPuino/master/pictures/Mgmt-GUI2.jpg" width="300">
 
 Webgui #3:
-<img src="https://raw.githubusercontent.com/biologist79/Tonuino-ESP32-I2S/master/pictures/Mgmt-GUI3.jpg" width="300">
+<img src="https://raw.githubusercontent.com/biologist79/ESPuino/master/pictures/Mgmt-GUI3.jpg" width="300">
 
 Webgui: websocket broken:
-<img src="https://raw.githubusercontent.com/biologist79/Tonuino-ESP32-I2S/master/pictures/Mgmt-GUI_connection_broken.jpg" width="300">
+<img src="https://raw.githubusercontent.com/biologist79/ESPuino/master/pictures/Mgmt-GUI_connection_broken.jpg" width="300">
 
 Webgui: action ok:
-<img src="https://raw.githubusercontent.com/biologist79/Tonuino-ESP32-I2S/master/pictures/Mgmt_GUI_action_ok.jpg" width="300">
+<img src="https://raw.githubusercontent.com/biologist79/ESPuino/master/pictures/Mgmt_GUI_action_ok.jpg" width="300">
 
 Please note: as you apply a RFID-tag to the RFID-reader, the corresponding ID is pushed to the GUI (and flashes a few times; so you can't miss it). So there's no need to enter such IDs manually (unless you want to).
 
-## Interacting with Tonuino
+## Interacting with ESPuino
 ### Playmodes
 It's not just simply playing music; different playmodes are supported:
 * single track
@@ -207,10 +207,10 @@ After having Tonuino running on your ESP32 in your local WiFi, the webinterface-
 * General-configuration (volume, neopixel-brightness, sleep after inactivity)
 
 ### FTP (optional)
-In order to avoid exposing uSD-card or disassembling the Tonuino all the time for adding new music, it's possible to transfer music onto the uSD-card using FTP. Please make sure to set the max. number of parallel connections to ONE in your FTP-client. My recommendation is [Filezilla](https://filezilla-project.org/). But don't expect fast transfer, it's only around 145 kB/s and decreases dramatically, if music is played in parallel. Better stop playback then doing a FTP-transfer. Default-user and password are set via `ftpUser` and `ftpPassword`.
+In order to avoid exposing uSD-card or disassembling the ESPuino all the time for adding new music, it's possible to transfer music onto the uSD-card using FTP. Please make sure to set the max. number of parallel connections to ONE in your FTP-client. My recommendation is [Filezilla](https://filezilla-project.org/). But don't expect fast transfer, it's only around 145 kB/s and decreases dramatically, if music is played in parallel. Better stop playback then doing a FTP-transfer. Default-user and password are set via `ftpUser` and `ftpPassword`.
 
 ### Energy saving
-As already described in the modify-section, there are different sleepmodes available. Additionaly uC will be put into deepsleep after 10 minutes of inactivity (configurable my maxInactivityTime) unless Tonuino doesn't play music, has a FTP-client connected and any input via buttons. Every button-interaction resets the counter to the initial value.
+As already described in the modify-section, there are different sleepmodes available. Additionaly uC will be put into deepsleep after 10 minutes of inactivity (configurable my maxInactivityTime) unless ESPuino doesn't play music, has a FTP-client connected and any input via buttons. Every button-interaction resets the counter to the initial value.
 
 ### MQTT (optional)
 Everything that can be controlled via RFID-tags and buttons, can also be controlled via MQTT. All manual interactions (buttons, RFID-tags) are also sent to MQTT in parallel, so everything is always in-sync (unless Wifi/MQTT-connection is broken). In my home-setup I'm using [openHAB](https://www.openhab.org/) to encapsulate MQTT into a nice GUI, that's accessible via APP + web. ToDo: Publish sample-configurations for openHAB.
@@ -222,4 +222,4 @@ Please refer [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S), a
 As all assignments between RFID-IDs and actions (playmode, file to play...) is saved in ESP's NVS, the problem is that it's all gone when the ESP is broken. So that's where a backup comes into play. So every time you change or add a new assignment between a RFID-tag and an action via GUI, a backup-file is saved on the uSD-card. The file's name can be changed via `backupFile`. Again using the GUI you can use the upload-form to import such a file. To be honest: Sometimes I had some issues with Firefox doing this whereas Safari turned out to do it right. Don't know why :-(.
 
 ## Smarthome (optional)
-As already described, MQTT is supported. In order to use it it's necessary to run a MQTT-broker; [Mosquitto](https://mosquitto.org/) for instance. After connecting to it, Tonuino subscribes to all command-topics. State-topics are used to push states to the broker in order to inform others if anything changed (change of volume, new playlist, new track... name it). Others, like openHAB, subscribe to state-topics end send commands via command-topics. So it's not just limited to openHAB. It's just necessary to use a platform, that supports MQTT.
+As already described, MQTT is supported. In order to use it it's necessary to run a MQTT-broker; [Mosquitto](https://mosquitto.org/) for instance. After connecting to it, ESPuino subscribes to all command-topics. State-topics are used to push states to the broker in order to inform others if anything changed (change of volume, new playlist, new track... name it). Others, like openHAB, subscribe to state-topics end send commands via command-topics. So it's not just limited to openHAB. It's just necessary to use a platform, that supports MQTT.
